@@ -55,7 +55,7 @@
         @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
         .ai-bubble { background: var(--dropdown-bg); color: var(--text-main); align-self: flex-start; border-bottom-left-radius: 4px; }
-        .user-bubble { background: var(--accent); color: white; align-self: flex-end; border-bottom-right-radius: 4px; shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.2); }
+        .user-bubble { background: var(--accent); color: white; align-self: flex-end; border-bottom-right-radius: 4px; box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.2); }
         
         .input-dock { padding: 20px 40px 30px; }
         .input-pill {
@@ -73,19 +73,29 @@
 
         .id-circle { width: 42px; height: 42px; background: var(--accent); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; cursor: pointer; transition: 0.3s; }
         
-        #user-modal {
-            position: absolute; right: 40px; top: 80px; width: 260px;
-            background: var(--panel); border-radius: 25px; padding: 20px; 
-            display: none; border: 1px solid var(--border); box-shadow: 0 20px 40px rgba(0,0,0,0.1); z-index: 100;
+        /* AUTH & PAYMENT MODAL STYLES */
+        #user-modal, #payment-modal {
+            position: absolute; right: 40px; top: 80px; width: 320px;
+            background: var(--panel); border-radius: 30px; padding: 25px; 
+            display: none; border: 1px solid var(--border); box-shadow: 0 25px 50px rgba(0,0,0,0.2); z-index: 100;
+            animation: fadeIn 0.2s ease-out;
+        }
+        #payment-modal { right: auto; top: auto; width: 360px; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+
+        .auth-input {
+            width: 100%; background: var(--dropdown-bg); border: 1px solid var(--border);
+            padding: 12px; border-radius: 12px; margin-bottom: 10px; font-size: 14px;
+            outline: none; color: var(--text-main);
         }
 
-        /* Scrollbar styling */
+        .gen-image { border-radius: 15px; margin-top: 10px; width: 100%; max-width: 400px; border: 2px solid var(--accent); }
+
         ::-webkit-scrollbar { width: 5px; }
         ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
     </style>
 </head>
-<body>
-
+<body class="dark"> 
     <div class="app-shell">
         <aside class="sidebar">
             <div class="flex items-center gap-3 mb-4">
@@ -94,24 +104,23 @@
             </div>
 
             <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">System Identity</label>
-            <select class="identity-select" id="persona">
-                <option value="professional">💼 Professional AI</option>
-                <option value="friendly">🤝 Friendly AI</option>
-                <option value="creative">🎨 Creative Mode</option>
+            <select class="identity-select" id="persona" onchange="handlePersonaChange(this.value)">
+                <option value="Professional Mode. Concise and smart.">💼 Professional AI (Paid)</option>
+                <option value="Friendly Mode. Helpful and warm." selected>🤝 Friendly AI</option>
+                <option value="Creative Mode. Bold and imaginative.">🎨 Creative Mode</option>
             </select>
 
             <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-4">Recent Conversations</label>
-            <div id="history-list" class="flex-1 overflow-y-auto space-y-2 pr-2">
-                </div>
+            <div id="history-list" class="flex-1 overflow-y-auto space-y-2 pr-2"></div>
 
-            <button onclick="clearHistory()" class="mt-auto p-4 bg-red-50 dark:bg-red-900/10 text-red-500 rounded-2xl font-bold text-[10px] uppercase tracking-tighter hover:bg-red-100 transition">Clear All History</button>
+            <button onclick="clearHistory()" class="mt-auto p-4 bg-red-50 dark:bg-red-900/10 text-red-500 rounded-2xl font-bold text-[10px] uppercase tracking-tighter hover:bg-red-100 transition">Clear All Memory</button>
         </aside>
 
         <main class="main-workspace">
             <header class="header">
                 <span class="text-xs font-bold text-slate-400">TITAN CORE v5.6 <span id="status" class="hidden ml-2 italic text-blue-500 animate-pulse">analyzing...</span></span>
                 <div class="flex items-center gap-6">
-                    <button onclick="toggleDarkMode()" class="text-xl hover:scale-110 transition" id="theme-icon">🌙</button>
+                    <button onclick="toggleDarkMode()" class="text-xl hover:scale-110 transition" id="theme-icon">☀️</button>
                     <div class="id-circle" onclick="toggleModal()">SU</div>
                 </div>
             </header>
@@ -124,7 +133,7 @@
                     <button onclick="document.getElementById('file-input').click()" class="p-2 text-slate-400 hover:text-blue-500">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path></svg>
                     </button>
-                    <input type="text" id="user-msg" placeholder="Ask Nexa anything..." onkeypress="handleEnter(event)">
+                    <input type="text" id="user-msg" placeholder="Command Titan Core..." onkeypress="handleEnter(event)">
                     <button class="p-2 text-slate-400 hover:text-blue-500" onclick="startVoice()">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg>
                     </button>
@@ -136,19 +145,62 @@
         </main>
 
         <div id="user-modal">
-            <h3 class="font-black text-[10px] text-blue-600 uppercase mb-3 tracking-widest">User Profile</h3>
-            <p class="text-sm font-bold">Hussain Babar</p>
-            <p class="text-xs text-slate-400">admin@nexa.ai</p>
-            <div class="h-[1px] bg-slate-100 dark:bg-slate-700 my-4"></div>
-            <button onclick="toggleModal()" class="w-full py-2 bg-slate-100 dark:bg-slate-700 rounded-xl text-xs font-bold">Close</button>
+            <div id="auth-content">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 id="auth-title" class="font-black text-sm text-blue-600 uppercase tracking-widest">Login to Nexa</h3>
+                    <button onclick="toggleModal()" class="text-slate-400 hover:text-red-500">✕</button>
+                </div>
+                <div id="auth-form">
+                    <input type="email" placeholder="Email Address" class="auth-input">
+                    <input type="password" placeholder="Password" class="auth-input">
+                    <button onclick="alert('Demo Login Successful!')" class="w-full py-3 bg-blue-600 text-white rounded-xl font-bold text-sm mb-4 hover:bg-blue-700 transition">Continue</button>
+                </div>
+                <div class="text-center">
+                    <p id="auth-toggle-text" class="text-xs text-slate-400">Don't have an account? <a href="javascript:void(0)" onclick="toggleAuthMode()" class="text-blue-500 font-bold">Sign Up</a></p>
+                </div>
+            </div>
+        </div>
+
+        <div id="payment-modal" style="display:none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 200; align-items: center; justify-content: center;">
+            <div class="bg-white dark:bg-slate-800 p-8 rounded-[40px] w-[380px] text-center border border-blue-500 shadow-2xl relative">
+                <button onclick="closePayment()" class="absolute right-6 top-6 text-slate-400">✕</button>
+                <h2 class="text-2xl font-black mb-1">NEXA PRO</h2>
+                <p class="text-[10px] text-blue-500 font-bold uppercase tracking-widest mb-6">Unlock Professional AI</p>
+                
+                <div class="flex gap-2 mb-6 bg-slate-100 dark:bg-slate-700 p-1 rounded-2xl">
+                    <button onclick="switchPayTab('ep')" id="btn-ep" class="flex-1 py-2 rounded-xl font-bold text-xs bg-white dark:bg-slate-600 shadow-sm">EasyPaisa</button>
+                    <button onclick="switchPayTab('card')" id="btn-card" class="flex-1 py-2 rounded-xl font-bold text-xs">Card Payment</button>
+                </div>
+
+                <div id="pay-ep">
+                    <div class="bg-green-50 dark:bg-green-900/20 p-4 rounded-2xl mb-4 text-left border border-green-200 dark:border-green-800">
+                        <p class="text-[10px] uppercase font-black text-green-600">Send Rs. 500 to:</p>
+                        <p class="font-bold text-lg text-slate-800 dark:text-white">03XX-XXXXXXX</p> 
+                        <p class="text-xs opacity-70 italic text-slate-500">Account: Hussain Babar</p>
+                    </div>
+                    <input type="text" id="trx-id" placeholder="Transaction ID" class="auth-input">
+                </div>
+
+                <div id="pay-card" class="hidden space-y-3">
+                    <input type="text" placeholder="Card Number" class="auth-input">
+                    <div class="flex gap-2">
+                        <input type="text" placeholder="MM/YY" class="auth-input w-1/2">
+                        <input type="text" placeholder="CVC" class="auth-input w-1/2">
+                    </div>
+                </div>
+
+                <button onclick="processPayment()" class="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold mt-4 shadow-lg shadow-blue-500/30">Verify Payment</button>
+            </div>
         </div>
     </div>
 
     <script>
-        const GROQ_KEY = "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";
+        const BACKUP_KEY = "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";
         const API_URL = "https://api.groq.com/openai/v1/chat/completions";
 
         let history = JSON.parse(localStorage.getItem('nexa_history')) || [];
+        let isLoginMode = true;
+        let isPro = localStorage.getItem('nexa_pro') === 'true';
 
         window.onload = () => {
             updateHistoryUI();
@@ -159,6 +211,43 @@
             }
         };
 
+        function handlePersonaChange(val) {
+            if (val.includes("Professional") && !isPro) {
+                document.getElementById('payment-modal').style.display = 'flex';
+                document.getElementById('persona').value = "Friendly Mode. Helpful and warm.";
+            }
+        }
+
+        function switchPayTab(type) {
+            document.getElementById('pay-ep').className = type === 'ep' ? 'block' : 'hidden';
+            document.getElementById('pay-card').className = type === 'card' ? 'block' : 'hidden';
+            document.getElementById('btn-ep').className = type === 'ep' ? 'flex-1 py-2 rounded-xl font-bold text-xs bg-white dark:bg-slate-600 shadow-sm' : 'flex-1 py-2 rounded-xl font-bold text-xs';
+            document.getElementById('btn-card').className = type === 'card' ? 'flex-1 py-2 rounded-xl font-bold text-xs bg-white dark:bg-slate-600 shadow-sm' : 'flex-1 py-2 rounded-xl font-bold text-xs';
+        }
+
+        function processPayment() {
+            alert("Payment Request Received! We will verify and enable Pro Mode within 24 hours.");
+            isPro = true;
+            localStorage.setItem('nexa_pro', 'true');
+            closePayment();
+            document.getElementById('persona').value = "Professional Mode. Concise and smart.";
+        }
+
+        function closePayment() { document.getElementById('payment-modal').style.display = 'none'; }
+
+        function toggleAuthMode() {
+            isLoginMode = !isLoginMode;
+            const title = document.getElementById('auth-title');
+            const toggleText = document.getElementById('auth-toggle-text');
+            if(isLoginMode) {
+                title.innerText = "Login to Nexa";
+                toggleText.innerHTML = `Don't have an account? <a href="javascript:void(0)" onclick="toggleAuthMode()" class="text-blue-500 font-bold">Sign Up</a>`;
+            } else {
+                title.innerText = "Create Account";
+                toggleText.innerHTML = `Already have an account? <a href="javascript:void(0)" onclick="toggleAuthMode()" class="text-blue-500 font-bold">Login</a>`;
+            }
+        }
+
         function handleEnter(e) { if(e.key === 'Enter') handleSend(); }
 
         async function handleSend() {
@@ -167,40 +256,44 @@
             const persona = document.getElementById('persona').value;
             
             if(!text) return;
-
             input.value = '';
             renderMessage('user', text);
             document.getElementById('status').classList.remove('hidden');
 
+            const imgTriggers = ["generate image", "make a picture", "create image", "draw", "pic of", "image of"];
+            const isImageRequest = imgTriggers.some(t => text.toLowerCase().includes(t));
+
+            if(isImageRequest) {
+                setTimeout(() => {
+                    const prompt = text.replace(/generate image|make a picture|create image|draw|pic of|image of/gi, '').trim();
+                    const finalPrompt = prompt || "futuristic ai core";
+                    const imgUrl = `https://pollinations.ai/p/${encodeURIComponent(finalPrompt)}?width=1024&height=1024&seed=${Math.floor(Math.random()*1000)}`;
+                    renderMessage('assistant', `Generating image for: **${finalPrompt}**<br><img src="${imgUrl}" class="gen-image" alt="Nexa Gen">`);
+                    document.getElementById('status').classList.add('hidden');
+                }, 1000);
+                return;
+            }
+
             try {
                 const response = await fetch(API_URL, {
                     method: 'POST',
-                    headers: { 'Authorization': `Bearer ${GROQ_KEY}`, 'Content-Type': 'application/json' },
+                    headers: { 'Authorization': `Bearer ${BACKUP_KEY}`, 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         model: "llama-3.3-70b-versatile",
-                        messages: [
-                            {role: "system", content: `You are NexaAI. Persona: ${persona}. Rules: No asterisks (*). Use clear headings. Be concise.`},
-                            ...history.slice(-10), 
-                            {role: "user", content: text}
-                        ]
+                        messages: [{role: "system", content: `You are NexaAI Titan Core. ${persona} No asterisks.`}, ...history.slice(-6), {role: "user", content: text}],
+                        temperature: 0.7
                     })
                 });
-
                 const data = await response.json();
                 let aiMsg = data.choices[0].message.content.replace(/\*/g, '');
-
                 renderMessage('assistant', aiMsg);
-                
-                history.push({role: "user", content: text});
-                history.push({role: "assistant", content: aiMsg});
-                localStorage.setItem('nexa_history', JSON.stringify(history.slice(-40)));
+                history.push({role: "user", content: text}, {role: "assistant", content: aiMsg});
+                localStorage.setItem('nexa_history', JSON.stringify(history.slice(-20)));
                 updateHistoryUI();
-
             } catch (e) {
-                renderMessage('assistant', "Connection interrupted. Check API link.");
+                renderMessage('assistant', "Core Connection Lost.");
             } finally {
                 document.getElementById('status').classList.add('hidden');
-                input.focus();
             }
         }
 
@@ -208,7 +301,7 @@
             const stream = document.getElementById('chat-stream');
             const div = document.createElement('div');
             div.className = `bubble ${role === 'user' ? 'user-bubble' : 'ai-bubble'}`;
-            div.innerHTML = role === 'assistant' ? marked.parse(text) : text;
+            div.innerHTML = role === 'assistant' ? (text.includes('<img') ? text : marked.parse(text)) : text;
             stream.appendChild(div);
             stream.scrollTop = stream.scrollHeight;
         }
@@ -216,8 +309,7 @@
         function updateHistoryUI() {
             const list = document.getElementById('history-list');
             list.innerHTML = '';
-            const userMessages = history.filter(m => m.role === 'user').reverse().slice(0, 8);
-            userMessages.forEach(m => {
+            history.filter(m => m.role === 'user').reverse().slice(0, 5).forEach(m => {
                 const item = document.createElement('div');
                 item.className = 'history-item';
                 item.innerText = m.content;
@@ -228,32 +320,15 @@
 
         function toggleModal() {
             const m = document.getElementById('user-modal');
-            m.style.display = m.style.display === 'block' ? 'none' : 'block';
-        }
-
-        function handleFile(e) { if(e.target.files[0]) renderMessage('user', `Attachment: ${e.target.files[0].name}`); }
-        
-        function startVoice() {
-            const rec = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-            rec.onstart = () => { document.getElementById('user-msg').placeholder = "Listening..."; };
-            rec.onresult = (e) => { 
-                document.getElementById('user-msg').value = e.results[0][0].transcript;
-                document.getElementById('user-msg').placeholder = "Ask Nexa anything...";
-            };
-            rec.start();
-        }
-
-        function clearHistory() { 
-            if(confirm("Wipe all Titan Core memory?")) {
-                localStorage.removeItem('nexa_history'); 
-                location.reload(); 
-            }
+            m.style.display = (m.style.display === 'block') ? 'none' : 'block';
         }
 
         function toggleDarkMode() {
             document.documentElement.classList.toggle('dark');
             document.getElementById('theme-icon').innerText = document.documentElement.classList.contains('dark') ? '☀️' : '🌙';
         }
+
+        function clearHistory() { if(confirm("Wipe memory?")) { localStorage.removeItem('nexa_history'); location.reload(); } }
     </script>
 </body>
 </html>
